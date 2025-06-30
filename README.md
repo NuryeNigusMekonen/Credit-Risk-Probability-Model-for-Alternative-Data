@@ -44,165 +44,175 @@ Thus, while proxy variables enable modeling, their design must be guided by **bu
 
 # lets go business report for Credit Risk Probability Model for Alternative Data
 
+# Credit Risk Probability Model for Alternative Data
+
+A full machine learning pipeline for identifying high-risk customers using transactional behavior. This solution leverages alternative data and is built for micro-lending or financial institutions seeking robust, explainable, and scalable credit risk prediction using MLOps best practices.
+
 
 ##  Background
 
-This project is designed for micro-lending institutions and digital banks targeting financially underserved customers. Traditional credit scoring models rely on historical loan data, which is often unavailable for new or informal economy users. As a result, financial institutions need alternative models that leverage non-traditional features, like transaction behavior and telecom-based metadata.
+This project is developed for financial institutions operating in low-documentation or underbanked environments, particularly micro-lenders in emerging markets. The system uses **alternative data sources** (e.g., mobile transactions) to assess credit risk where traditional credit history is unavailable.
 
 ---
 
-##  Problem Statement
+##❗ Problem Statement
 
-Financial institutions face difficulty in evaluating the creditworthiness of new or unbanked customers. Without a risk scoring mechanism based on alternative data, these institutions either over-lend (leading to high defaults) or under-lend (missing growth opportunities). This project aims to create a probability-based credit risk model using customer behavioral data to improve credit decision-making.
+Banks and microfinance institutions often struggle to evaluate creditworthiness due to limited or no access to traditional credit history. This increases default risk, reduces lending efficiency, and locks out deserving customers. A scalable system is needed to identify **"high-risk" borrowers** using **transactional alternative data**.
 
 ---
 
 ##  Objective
 
-To build a robust, production-ready credit risk probability scoring model using alternative customer data, and deploy it via a containerized API for real-time integration.
+To build a machine learning system that predicts:
+- `risk_probability`: likelihood of default
+- `is_high_risk`: binary classification flag for intervention
 
 ---
 
-##  Approach & Methodology
+## Approach / Methodology
 
-- **Tools & Libraries:** `pandas`, `scikit-learn`, `xgboost`, `mlflow`, `joblib`, `fastapi`, `docker`, `GitHub Actions`
-- **Steps:**
-  - Data Cleaning & Feature Engineering (RFM metrics, behavior traits)
-  - Model Training (Logistic Regression, Random Forest, XGBoost)
-  - Performance Evaluation (Precision, Recall, F1, ROC AUC)
-  - MLflow Experiment Tracking & Model Registry
-  - FastAPI Deployment with Docker
-  - CI/CD with GitHub Actions for linting & testing
+### Tools & Technologies:
+- **Python, Pandas, Scikit-Learn, XGBoost**
+- **MLflow** for experiment tracking and model registry
+- **FastAPI** for API deployment
+- **Docker** and **GitHub Actions** for CI/CD
+- **Flake8**, **Pytest** for quality checks
+
+### Workflow:
+1. Cleaned and engineered features from raw transaction data
+2. Engineered proxy target (`is_high_risk`) using RFM-like metrics
+3. Trained and evaluated multiple models (Logistic Regression, Random Forest, XGBoost)
+4. Logged and tracked experiments using MLflow
+5. Containerized API service using Docker + FastAPI
+6. Implemented automated CI/CD with GitHub Actions
 
 ---
 
 ##  Proposed Solution
 
-### a) Preprocessing
+### a) Data Preprocessing
 
-- Cleaned missing values, handled class imbalance.
-- Derived aggregate features like `Amount_mean`, `txn_hour_nunique`, etc.
-- Used `ColumnTransformer` with:
-  - `StandardScaler` for numeric features
-  - `OneHotEncoder` for categorical features
-- Pipeline-ready transformation for deployment
+- **Missing Values**: Imputed using `SimpleImputer` (mean for numeric, mode for categorical)
+- **Scaling**: Applied `StandardScaler` to numeric features
+- **Encoding**: Used `OneHotEncoder` for categorical fields
+- **Features Used**:
+    - `Amount_sum`, `Amount_mean`, `Amount_std`, `Amount_count`
+    - `txn_year_nunique`, `txn_month_nunique`, `txn_dayofweek_nunique`, `txn_hour_nunique`
+    - `ProviderId`, `ProductCategory`, `ChannelId`, `PricingStrategy`
 
-### b) Experimentation & Modeling
+- **Proxy Target Engineering**:
+    - Created `is_high_risk` label by clustering RFM metrics
+    - High-risk customers identified as disengaged or anomalous
 
-Three classifiers were tested using `GridSearchCV` and 5-fold cross-validation:
+### b) Modeling & Experimentation
 
-| Model              | F1 Score | ROC AUC | Best Hyperparameters                        |
-|-------------------|----------|---------|---------------------------------------------|
-| LogisticRegression| 0.72     | 0.80    | C = 0.1                                      |
-| RandomForest       | 0.84     | 0.93    | n_estimators = 200, max_depth = 10          |
-| XGBoost            | **0.88** | **0.95**| learning_rate = 0.1, max_depth = 5, n_estimators = 200 |
+| Model               | Accuracy | Precision | Recall | F1-Score | ROC AUC |
+|--------------------|----------|-----------|--------|----------|---------|
+| Logistic Regression| 66.9%    | 0.54      | 0.87   | 0.668    | 0.768   |
+| Random Forest       | **73.7%**| **0.61**  | **0.85**| **0.712**| **0.821**|
+| XGBoost             | 72.5%    | 0.59      | 0.88   | 0.711    | 0.821   |
 
-- The best model (XGBoost) was logged to MLflow and registered as `xgboost_final`.
-- Trained models were saved as `.pkl` in `/models` and also to the MLflow registry for production use.
+- **Best Model**:  `Random Forest`  
+- **Model Registered**: `random_forest_final` via MLflow Registry  
+- **Saved Model**: `random_forest_model.pkl`
 
 ---
 
 ##  Evaluation
 
-- Final selected model (XGBoost) achieved:
-  - **Precision:** 0.86
-  - **Recall:** 0.91
-  - **F1 Score:** 0.88
-  - **ROC AUC:** 0.95
-- Model was validated with real-world-like customer profiles to assess generalizability.
+- The **Random Forest model** achieved:
+    - **F1 Score**: 0.712
+    - **ROC AUC**: 0.821
+- Performance was consistent across test sets and robust to class imbalance.
+- Deployed model returns both:
+    ```json
+    {
+      "risk_probability": 0.51,
+      "is_high_risk": true
+    }
+    ```
 
 ---
 
-##  Conclusion & Recommendations
+##  Deployment & CI/CD (Task 6)
 
-- This end-to-end system provides an accurate, explainable, and production-ready credit risk scoring solution based on behavioral data.
-- Banks and micro-lenders can integrate this into onboarding workflows to improve credit approvals.
-- **Future Work:**
-  - Add explainability tools (e.g., SHAP, LIME)
-  - Integrate telecom and social data sources
-  - Include time-series-based risk trends
+###  FastAPI REST API
+- `/predict` endpoint
+- Accepts input via Pydantic schema
+- Returns prediction from best registered model
+
+###  Dockerized Service
+- **Dockerfile** builds the API service
+- Port `8000` exposed
+- Built with:
+    ```bash
+    docker build -t credit-risk-api .
+    docker run -d -p 8000:8000 credit-risk-api
+    ```
+
+###  GitHub Actions CI
+- Workflow defined in `.github/workflows/ci.yml`
+- Runs on every `push` to `main`
+- Steps:
+  -  Run `flake8` linter for style
+  -  Run `pytest` for test coverage
+- Ensures code quality and stability
+
+---
+
+##  Conclusion & Recommendation
+
+This solution allows financial institutions to:
+- Reliably assess **credit risk** using **alternative data**
+- Automate the entire ML workflow from data to deployment
+- Detect risky profiles **before issuing loans**
+- Adapt easily to new transactional data
+
+###  Future Work
+- Integrate with real-time streaming data
+- Add explainability (e.g., SHAP) for model transparency
+- Extend to multi-tier risk segmentation
 
 ---
 
 ##  References
 
-- [scikit-learn documentation](https://scikit-learn.org/)
-- [XGBoost documentation](https://xgboost.readthedocs.io/)
-- [MLflow documentation](https://mlflow.org/)
-- [FastAPI documentation](https://fastapi.tiangolo.com/)
-- [Docker documentation](https://docs.docker.com/)
+- [MLflow Docs](https://mlflow.org/)
+- [Scikit-Learn](https://scikit-learn.org/)
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [GitHub Actions](https://docs.github.com/en/actions)
 
 ---
 
 ##  Annex
 
-###  API Test Example
-
+###  Example API Request (via `curl`)
 ```bash
 curl -X POST http://localhost:8000/predict \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "Amount_sum": 10000.0,
-    "Amount_mean": 10000.0,
-    "Amount_std": 6558.96,
-    "Amount_count": 20,
-    "txn_year_nunique": 1,
-    "txn_month_nunique": 2,
-    "txn_dayofweek_nunique": 5,
-    "txn_hour_nunique": 1,
-    "ProviderId": "ProviderId_4",
-    "ProductCategory": "airtime",
-    "ChannelId": "ChannelId_2",
-    "PricingStrategy": "2"
+-H 'Content-Type: application/json' \
+-d '{
+  "Amount_sum": 10000,
+  "Amount_mean": 10000,
+  "Amount_std": 6558.96,
+  "Amount_count": 20,
+  "txn_year_nunique": 1,
+  "txn_month_nunique": 2,
+  "txn_dayofweek_nunique": 5,
+  "txn_hour_nunique": 1,
+  "ProviderId": "ProviderId_4",
+  "ProductCategory": "airtime",
+  "ChannelId": "ChannelId_2",
+  "PricingStrategy": "2"
 }'
 ````
 
-Response:
+###  Example Response
 
 ```json
 {
-  "risk_probability": 0.5090070880498481
+  "risk_probability": 0.509,
+  "is_high_risk": true
 }
-```
-
----
-
-###  Docker Deployment
-
-```bash
-# Build image
-docker build -t credit-risk-api .
-
-# Run container
-docker run -d -p 8000:8000 credit-risk-api
-```
-
-###  CI/CD Workflow (GitHub Actions)
-
-```yaml
-name: CI Pipeline
-
-on: [push]
-
-jobs:
-  lint-and-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10.18'
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-      - name: Lint with flake8
-        run: |
-          flake8 src --count --select=E9,F63,F7,F82 --show-source --statistics
-      - name: Run tests
-        run: |
-          pytest
-```
 
 ---
 
