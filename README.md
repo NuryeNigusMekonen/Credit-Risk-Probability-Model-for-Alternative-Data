@@ -211,9 +211,9 @@ curl -X POST http://localhost:8000/predict \
 ```json
 {
   "risk_probability": 0.509,
-  "is_high_risk": true
+  "is_high_risk": 1
 }
 
----
+```
 
 >  **Maintained by:** Nurye Nigus
