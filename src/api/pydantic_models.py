@@ -1,18 +1,19 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 class CustomerFeatures(BaseModel):
-    Amount_sum: float = Field(..., example=2500.5)
-    Amount_mean: float = Field(..., example=125.0)
-    Amount_std: float = Field(..., example=15.5)
-    Amount_count: float = Field(..., example=20.0)
-    txn_year_nunique: int = Field(..., example=1)
-    txn_month_nunique: int = Field(..., example=2)
-    txn_dayofweek_nunique: int = Field(..., example=5)
-    txn_hour_nunique: int = Field(..., example=10)
-    ProviderId: str = Field(..., example="ProviderId_4")
-    ProductCategory: str = Field(..., example="airtime")
-    ChannelId: str = Field(..., example="ChannelId_2")
-    PricingStrategy: str = Field(..., example="2")
+    Amount_sum: float
+    Amount_mean: float
+    Amount_std: float
+    Amount_count: int
+    txn_year_nunique: int
+    txn_month_nunique: int
+    txn_dayofweek_nunique: int
+    txn_hour_nunique: int
+    ProviderId: str
+    ProductCategory: str
+    ChannelId: str
+    PricingStrategy: str
 
 class PredictionResponse(BaseModel):
-    risk_probability: float = Field(..., example=0.85)
+    risk_probability: float
+    is_high_risk: int  
