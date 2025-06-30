@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+mlflow
+pydantic
+joblib
+scikit-learn
+xgboost
+pandas
+numpy
+python-multipart
+flake8  # for linting
+pytest  # for testing
