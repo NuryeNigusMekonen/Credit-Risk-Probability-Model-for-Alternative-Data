@@ -55,7 +55,7 @@ This project is developed for financial institutions operating in low-documentat
 
 ---
 
-##❗ Problem Statement
+## Problem Statement
 
 Banks and microfinance institutions often struggle to evaluate creditworthiness due to limited or no access to traditional credit history. This increases default risk, reduces lending efficiency, and locks out deserving customers. A scalable system is needed to identify **"high-risk" borrowers** using **transactional alternative data**.
 
@@ -128,7 +128,7 @@ To build a machine learning system that predicts:
     ```json
     {
       "risk_probability": 0.51,
-      "is_high_risk": true
+      "is_high_risk": 1
     }
     ```
 
